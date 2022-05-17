@@ -1,0 +1,27 @@
+{
+  "name": "discord-weather-bot",
+  "version": "1.0.0",
+  "description": "A Discord Bot that makes small talk about the weather",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/imaricodes/discord-weather-bot.git"
+  },
+  "author": "Imari Codes",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/imaricodes/discord-weather-bot/issues"
+  },
+  "homepage": "https://github.com/imaricodes/discord-weather-bot#readme",
+  "devDependencies": {
+    "dotenv": "^16.0.1",
+    "nodemon": "^2.0.16"
+  },
+  "dependencies": {
+    "discord.js": "^13.7.0"
+  }
+}
