@@ -5,6 +5,11 @@ const { Client, Intents } = require('discord.js');
 const Redis = require('redis');
 const fetch = require("node-fetch");
 const DISCORD_TOKEN = process.env.BOT_TOKEN;
+const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
+const TEST_API_REQ = `https://api.weatherapi.com/v1/current.json?key=${WEATHER_API_KEY}&q=London&aqi=no`
+
+const OPEN_WEATHER_KEY = process.env.OPEN_WEATHER_KEY;
+const OPEN_WEATHER_URL = `https://api.openweathermap.org/data/2.5/weather?q=cleveland&units=metric&APPID=${OPEN_WEATHER_KEY}`;
 
 const QUOTE_URL = "https://zenquotes.io/api/random";
 
@@ -35,60 +40,69 @@ discordClient.login(DISCORD_TOKEN);
 
 discordClient.on('ready', () =>{
     console.log('discord client ready to go!')
-    discordClient.on("messageCreate", message => {
+    discordClient.on("messageCreate", async message => {
        console.log('message received');
 
         if (message.author.bot) return;
         if (message.type === 'dm') return;
 
-        if (message.content === '$inspire') {
+        if (message.content === 's') {
                     console.log('user typed $inspire');
-                    getQuote().then(quote => message.channel.send(quote))
+                    // console.log(fetchWeatherData());
+                    let weatherInfo = await fetchWeatherData();
+                    console.log("line 53 weather info ", weatherInfo);
+
+                    //convert weather info obj to returnable string.
+                    let botMessage = `The current weather in ${weatherInfo.cityName} is ${weatherInfo.weatherDescription}.`;
+
+                    // return weather info to discord
+                     message.channel.send(botMessage);
+
+                    weatherInfo = {};
                 }
     })  
 })
 
-async function getQuote() {
+// this detructures weatherReport obj
+function getWeatherDetails ({name, weather}) {
+    let cityName = name;
+    let weatherDescription = weather[0].description
+    // console.log(conditions);
+    return {cityName, weatherDescription}
+}
+
+async function fetchWeatherData() {
     let response;
     let dataJSON;
-    let data;
 
     try {
-         response = await fetch("https://zenquotes.io/api/random")
+        //  response = await fetch("https://zenquotes.io/api/random")
+         response = await fetch(OPEN_WEATHER_URL);
+         
          dataJSON = await response.json();
-         data = await dataJSON[0]["q"] + " -" + dataJSON[0]["a"]
-        return data;
+     
+          /**  OPENWEATHER DATA */
+        // const {name, weather} = dataJSON; //destructure
+
+        let weatherReport = getWeatherDetails(dataJSON);
+
+        console.log("line 87", weatherReport);
+        return weatherReport
+
     } catch (err) {
-        console.errror(err);
+        console.error(err);
     }
 }
 
 
+
+
+
+
+
 function updateEncouragements (encouragingMessage) {
     //push message to redis database
-
 }
 
-
-
-//  function createRedisSet () {     
-//      redisClient.set('quotes', 'quute3'), (err, reply) => {
-//         console.log(reply); // 3
-//       });
-
-
-    // redisClient.sadd(['quotes', 'quote1', 'quote2', 'quute3'], function(err, reply) {
-    //     console.log(reply); // 3
-    //   });
-// }
-
-// createRedisSet();
-
-
-
-// (async () => {
-//     redisClient.on('error', (err) => console.log('Redis Client Error', err));
-//     await redisClient.connect();
-// })
 
 
