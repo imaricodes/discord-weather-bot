@@ -50,7 +50,7 @@ discordClient.on('ready', () =>{
                     console.log('user typed $inspire');
                     // console.log(fetchWeatherData());
                     let weatherInfo = await fetchWeatherData();
-                    console.log("line 53 weather info ", weatherInfo);
+                    // console.log("line 53 weather info ", weatherInfo);
 
                     //convert weather info obj to returnable string.
                     let botMessage = `The current weather in ${weatherInfo.cityName} is ${weatherInfo.weatherDescription}.`;
@@ -64,9 +64,11 @@ discordClient.on('ready', () =>{
 })
 
 // this detructures weatherReport obj
-function getWeatherDetails ({name, weather}) {
+function getWeatherDetails ({name, weather, main}) {
     let cityName = name;
     let weatherDescription = weather[0].description
+    let currentTemp = main.temp
+    console.log('current temp', currentTemp);
     // console.log(conditions);
     return {cityName, weatherDescription}
 }
@@ -79,14 +81,15 @@ async function fetchWeatherData() {
         //  response = await fetch("https://zenquotes.io/api/random")
          response = await fetch(OPEN_WEATHER_URL);
          
-         dataJSON = await response.json();
+         dataJSON =  await response.json();
      
           /**  OPENWEATHER DATA */
         // const {name, weather} = dataJSON; //destructure
 
         let weatherReport = getWeatherDetails(dataJSON);
+        // console.log(dataJSON);
 
-        console.log("line 87", weatherReport);
+        console.log("line 89 return to bot", weatherReport);
         return weatherReport
 
     } catch (err) {
