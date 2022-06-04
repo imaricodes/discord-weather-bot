@@ -9,7 +9,7 @@ const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
 const TEST_API_REQ = `https://api.weatherapi.com/v1/current.json?key=${WEATHER_API_KEY}&q=London&aqi=no`
 
 const OPEN_WEATHER_KEY = process.env.OPEN_WEATHER_KEY;
-const OPEN_WEATHER_URL = `https://api.openweathermap.org/data/2.5/weather?q=cleveland&units=metric&APPID=${OPEN_WEATHER_KEY}`;
+const OPEN_WEATHER_URL = `https://api.openweathermap.org/data/2.5/weather?q=las vegas&units=imperial&APPID=${OPEN_WEATHER_KEY}`;
 
 const QUOTE_URL = "https://zenquotes.io/api/random";
 
@@ -53,7 +53,8 @@ discordClient.on('ready', () =>{
                     // console.log("line 53 weather info ", weatherInfo);
 
                     //convert weather info obj to returnable string.
-                    let botMessage = `The current weather in ${weatherInfo.cityName} is ${weatherInfo.weatherDescription}.`;
+                    // let botMessage = `The current weather in ${weatherInfo.cityName} is ${weatherInfo.weatherDescription}.`;
+                    let botMessage = `The current temperature in ${weatherInfo.cityName} is ${weatherInfo.currentTemp} degrees Fahrenheit.`;
 
                     // return weather info to discord
                      message.channel.send(botMessage);
@@ -70,7 +71,7 @@ function getWeatherDetails ({name, weather, main}) {
     let currentTemp = main.temp
     console.log('current temp', currentTemp);
     // console.log(conditions);
-    return {cityName, weatherDescription}
+    return {cityName, weatherDescription, currentTemp}
 }
 
 async function fetchWeatherData() {
