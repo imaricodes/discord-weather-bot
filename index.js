@@ -1,9 +1,13 @@
+//API used: https://openweathermap.org/
+
 require('dotenv').config();
 
 // Require the necessary discord.js classes
 const { Client, Intents } = require('discord.js');
 const Redis = require('redis');
 const fetch = require("node-fetch");
+const redisClient = Redis.createClient();
+
 const DISCORD_TOKEN = process.env.BOT_TOKEN;
 const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
 const TEST_API_REQ = `https://api.weatherapi.com/v1/current.json?key=${WEATHER_API_KEY}&q=London&aqi=no`
@@ -13,7 +17,6 @@ const OPEN_WEATHER_URL = `https://api.openweathermap.org/data/2.5/weather?q=las 
 
 const QUOTE_URL = "https://zenquotes.io/api/random";
 
-const redisClient = Redis.createClient();
 
 //permissions for bot
 const intents = [
@@ -21,17 +24,6 @@ const intents = [
     Intents.FLAGS.GUILD_MESSAGES
 ]
 
-let sadWords = ["sad", 
-    "depressed", 
-    "unhappy", 
-    "angry",
-     "miserable"]
-
-let encouragements = [
-    "Cheer up!",
-    "Hang in there.",
-    "You are a great person / bot!"
-  ]
 
 // Create a new discord discordClient with permissions passed in (intents)
 const discordClient = new Client({intents});
@@ -79,7 +71,6 @@ async function fetchWeatherData() {
     let dataJSON;
 
     try {
-        //  response = await fetch("https://zenquotes.io/api/random")
          response = await fetch(OPEN_WEATHER_URL);
          
          dataJSON =  await response.json();
