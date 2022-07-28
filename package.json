@@ -25,6 +25,7 @@
     "axios": "^0.27.2",
     "discord.js": "^13.7.0",
     "promise-redis": "^0.0.5",
-    "redis": "^4.1.0"
+    "redis": "^4.1.0",
+    "xmlbuilder2": "^3.0.2"
   }
 }
