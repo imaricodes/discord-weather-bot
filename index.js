@@ -11,27 +11,38 @@ const axios = require('axios').default
 //usps credentials
 const USERNAME = process.env.USPS_API_ID
 
+let userZip = '44118'
+let cityStateObj = {
+    "city": '',
+    "state": ''
+}
+
 /** START ZIP CODE API*/
 let root = xmlbuilder2.create({version: '1.0'})
 .ele('CityStateLookupRequest', {USERID: USERNAME})
     .ele('ZipCode')
-        .ele('Zip5').txt('44118').up()
+        .ele('Zip5').txt(`${userZip}`).up()
     .up()
 .up();
 
 let xml=root.end({prettyprint: true});
 
+/** 
+ * Look up city and state based on zip code
+ */
 let ZIPLOOKUP_URL ='https://secure.shippingapis.com/ShippingAPI.dll?API=CityStateLookup&xml=' + encodeURIComponent(xml);
 
 //TODO: How to handle nonexistent or incorrectly formatted zip code
 axios.get(ZIPLOOKUP_URL)
 .then(function(response){
     const obj = xmlbuilder2.convert(response.data, {format: 'object'});
-    console.log(obj.CityStateLookupResponse.ZipCode.City);
+    // console.log(obj.CityStateLookupResponse.ZipCode.City);
     let userLocation = obj;
     const {CityStateLookupResponse:{ZipCode:{State}}, CityStateLookupResponse:{ZipCode:{City}}} = userLocation;
+    cityStateObj.city = City
+    cityStateObj.state = State
+    console.log('city state obj: ', cityStateObj);
     console.log('City and state are ', City, State);
-    
 })
 .catch (function(error){
     console.log(error);
