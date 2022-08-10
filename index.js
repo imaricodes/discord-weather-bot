@@ -5,30 +5,22 @@
 
 
 require('dotenv').config();
+
+//xmbuilder2 converts js objects to xml and back to a js object. This is needed because USPS api only works with xml
 const xmlbuilder2 = require('xmlbuilder2');
 const axios = require('axios').default
 
-//usps credentials
+//usps api credentials
 const USERNAME = process.env.USPS_API_ID
-
-// Require the necessary discord.js classes
-const { Client, Intents } = require('discord.js');
-const Redis = require('redis');
-const fetch = require("node-fetch");
-
-const DISCORD_TOKEN = process.env.BOT_TOKEN;
-// const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
-// const TEST_API_REQ = `https://api.weatherapi.com/v1/current.json?key=${WEATHER_API_KEY}&q=London&aqi=no`
-
 const OPEN_WEATHER_KEY = process.env.OPEN_WEATHER_KEY;
-// const OPEN_WEATHER_URL = `https://api.openweathermap.org/data/2.5/weather?q=las vegas&units=imperial&APPID=${OPEN_WEATHER_KEY}`;
+
+// Requirements for discord bot
+const { Client, Intents } = require('discord.js');
+const DISCORD_TOKEN = process.env.BOT_TOKEN;
 
 
 
-//TODO: How to handle nonexistent or incorrectly formatted zip code
-
-
-
+//find the city and state from USPS api based on zip code
 const getCityState = async (userZip) => {
     
     let root = xmlbuilder2.create({version: '1.0'})
@@ -41,113 +33,56 @@ const getCityState = async (userZip) => {
     let xml=root.end({prettyprint: true});
 
 
-    const output = await axios.get('https://secure.shippingapis.com/ShippingAPI.dll?API=CityStateLookup&xml=' + encodeURIComponent(xml))
-    .then(response => {
-        const userLocation = xmlbuilder2.convert(response.data, {format: 'object'});
-        // console.log('1 geCityState():',userLocation.CityStateLookupResponse.ZipCode.City);
+    const {data:response} = await axios.get('https://secure.shippingapis.com/ShippingAPI.dll?API=CityStateLookup&xml=' + encodeURIComponent(xml))
 
-        const {CityStateLookupResponse:{ZipCode:{State}}, CityStateLookupResponse:{ZipCode:{City}}} = userLocation;
+    const userLocation = xmlbuilder2.convert(response, {format: 'object'});
+
+    const {CityStateLookupResponse:{ZipCode:{State}}, CityStateLookupResponse:{ZipCode:{City}}} = userLocation;
 
         let cityStateObj = {
             city: City,
             state: State
         }
-        console.log('city state obj: ', cityStateObj);
-        // console.log('City and state are ', City, State);
-        return cityStateObj;
-    })
-    
-    // .then((location) => {
-    //     console.log('zipzip: ', location);
-    //     fetchWeatherData(location)
-    // })
-    // .then ((cityStateObj)=>{
-    //     console.log('made it: ', cityStateObj);
 
-    // })
-    .catch (function(error){
-        console.log(error);
-    });
+    return cityStateObj
+
 }
 
-
-async function getWeather(userZip) {
-  await getCityState(userZip)
-  .then((data)=>{
-        
-        // fetchWeatherData(data)
-        console.log('get weather data: ', data);
-    })
-//    await fetchWeatherData(test);
-//    console.log('second');
-     
-    // .then((cityStateObj) => {
-    //     // console.log(cityStateObj);
-    //     fetchWeatherData(cityStateObj)
-    //    }) 
-    // .then((dataJSON) => {getWeatherDetails(dataJSON)}) //return weather details as object
-    // .then((data) => {
-    //     let weatherReport = data;
-    //     return weatherReport;
-    // })
-}
-
-getWeather('44118');
-
-// getCityState('44118')
-
-
-
-
-//TODO: replace city and state with template literal from usps api resuts (return city and state from axios fetch as an object?)
-// const OPEN_WEATHER_URL = `https://api.openweathermap.org/data/2.5/weather?q=detroit,mi,usa&units=imperial&APPID=${OPEN_WEATHER_KEY}`;
-
-
-// this detructures weatherReport obj (NOT REALLY DESTRUCTURING??)
-async function getWeatherDetails ({name, weather, main}) {
-    let cityName = name;
-    let weatherDescription = weather[0].description
-    let currentTemp = main.temp
-    console.log('current temp', currentTemp);
-    // console.log(conditions);
-    return {cityName, weatherDescription, currentTemp}
-}
-
-async function fetchWeatherData(test) {
-    // console.log('2 fetchWeatherData() why undefined: ', test);
+//get weather data from openweathermap.org based on zip code
+async function fetchWeatherData(cityStateObj) {
     let response;
-    let dataJSON;
-    // let city = test.city.toLowerCase()
-    // let state = test.state.toLowerCase()
-    // console.log(city, state);
+    let city = cityStateObj.city.toLowerCase()
+    let state = cityStateObj.state.toLowerCase()
 
     try {
 
-        console.log('test success: ', test);
-        
-        //  response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city},${state},usa&units=imperial&APPID=${OPEN_WEATHER_KEY}`);
-         response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=denver,co,usa&units=imperial&APPID=${OPEN_WEATHER_KEY}`);
-         
-         
-         dataJSON =  await response.json();
-         console.log(dataJSON);
-     
+        response = await axios(`https://api.openweathermap.org/data/2.5/weather?q=${city},${state},usa&units=imperial&APPID=${OPEN_WEATHER_KEY}`);
+
           /**  OPENWEATHER DATA */
-        // const {name, weather} = dataJSON; //destructure
+        const {data:weatherData} = response; //destructure
 
-        // let weatherReport = await getWeatherDetails(dataJSON);
-        // console.log(dataJSON);
-
-        // console.log("line 89 return to bot", weatherReport);
-        // return dataJSON
+        cityStateObj.description = weatherData.weather[0].description
+        cityStateObj.temperature = weatherData.main.temp
+        // console.log('new object  ', cityStateObj);
+        return cityStateObj
 
     } catch (err) {
         console.error(err);
     }
 }
 
+//this function runs the getCityState, and fetchWeatherData functions 
+async function getWeather(userZip) {
+    let cityAndState =  await getCityState(userZip)
+    let currentWeather = await fetchWeatherData(cityAndState)
+    // let stepThree = await getWeatherDetails(stepTwo)
+    // console.log(currentWeather);
+    return currentWeather
+  
+  }
+  
 
-//permissions for bot
+//permissions for discord bot
 const intents = [
     Intents.FLAGS.GUILDS,
     Intents.FLAGS.GUILD_MESSAGES
@@ -163,26 +98,27 @@ discordClient.on('ready', () =>{
     discordClient.on("messageCreate", async message => {
        console.log('message received');
 
+        //if the message is from a bot, exit
         if (message.author.bot) return;
+
+        //if the message is a direct message, exit
         if (message.type === 'dm') return;
 
         if (message.content.startsWith('!')) {
-                console.log(message.content);
-                // let cityState = validateCityStateFormat('detroit, mi');
-                // console.log('cats', cats);
-                let botMessage = 'If you\'d like to know the weather where you are, enter your 5 digit US zip code'
-                // let weatherInfo = await fetchWeatherData();
-                    
-                //convert weather info obj to returnable string.
-                // let botMessage = `The current weather in ${weatherInfo.cityName} is ${weatherInfo.weatherDescription}.`;
-                // let botMessage = `The current temperature in ${weatherInfo.cityName} is ${weatherInfo.currentTemp} degrees Fahrenheit.`;
-                // let botMessage = `The current temperature in your zipcode is ${weatherInfo.currentTemp} degrees Fahrenheit.`;
-
-                // return weather info to discord
-                message.channel.send(botMessage);
-
-                //clear weather info
-                // weatherInfo = {};
+             
+                let userMessage = message.content.substring(1)
+                let userInputRegex = /^\d{5}$/
+                
+                if (userInputRegex.test(userMessage) ) {
+                    let weatherInfo = await getWeather(userMessage)
+                    let botMessage = `The current temperature in ${weatherInfo.city} is ${weatherInfo.temperature} degrees Fahrenheit.`;
+                    message.channel.send(botMessage);
+                }
+                else {
+                    message.channel.send("Weather request format is incorrect.")
+                    return
+                }
+                
         }
     })  
 })
