@@ -49,7 +49,7 @@ const getCityState = async (userZip) => {
 }
 
 //get weather data from openweathermap.org based on zip code
-async function fetchWeatherData(cityStateObj) {
+const fetchWeatherData = async ({ city, state }) => {
     let response;
 
     try {
