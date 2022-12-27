@@ -49,12 +49,12 @@ const getCityState = async (userZip) => {
 }
 
 //get weather data from openweathermap.org based on zip code
-async function fetchWeatherData(cityStateObj) {
+const fetchWeatherData = async ({ city, state }) => {
     let response;
-    let city = cityStateObj.city.toLowerCase()
-    let state = cityStateObj.state.toLowerCase()
 
     try {
+        let city = cityStateObj.city?.toLowerCase()
+        let state = cityStateObj.state?.toLowerCase()
 
         response = await axios(`https://api.openweathermap.org/data/2.5/weather?q=${city},${state},usa&units=imperial&APPID=${OPEN_WEATHER_KEY}`);
 
@@ -115,7 +115,7 @@ discordClient.on('ready', () =>{
                     message.channel.send(botMessage);
                 }
                 else {
-                    message.channel.send("Weather request format is incorrect.")
+                    message.channel.send("U.S. ZIP code not detected (5 digits)")
                     return
                 }
                 
