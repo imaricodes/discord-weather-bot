@@ -24,6 +24,7 @@
   "dependencies": {
     "axios": "^0.27.2",
     "discord.js": "^13.7.0",
+    "openai": "^3.2.1",
     "promise-redis": "^0.0.5",
     "redis": "^4.3.1",
     "xmlbuilder2": "^3.0.2"
